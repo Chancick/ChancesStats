@@ -154,7 +154,7 @@
         .download-hero { text-align: center; padding: 40px 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--card-radius); }
         .download-hero h2 { font-size: 24px; margin-bottom: 12px; }
         .download-hero p { color: var(--text-muted); max-width: 500px; margin: 0 auto 24px; line-height: 1.6; font-size: 14px; }
-        .btn-download { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .btn-download { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-decoration: none; }
         .btn-download:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
         .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px; }
@@ -163,7 +163,6 @@
         .feature-card h4 { margin-bottom: 6px; font-size: 15px; }
         .feature-card p { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
 
-        /* Новые блоки */
         .stat-box { background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 4px; }
         .stat-box .label { font-size: 12px; color: var(--text-muted); }
         .stat-box .value { font-size: 24px; font-weight: 600; }
@@ -220,6 +219,10 @@
         
         <!-- DASHBOARD -->
         <div id="dashboard" class="page-section active">
+            <div id="statusBanner" style="display: none; padding: 12px 20px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--card-radius); color: var(--text-main); font-size: 14px; margin-bottom: 8px; text-align: center;">
+                Загрузка...
+            </div>
+
             <div class="header">
                 <div class="header-left"><h1>Обзор системы</h1><p>Текущее состояние рабочей станции</p></div>
                 <div style="display:flex; gap:12px; align-items:center;">
@@ -231,7 +234,6 @@
                 </div>
             </div>
 
-            <!-- Быстрые показатели -->
             <div class="grid-stats">
                 <div class="card">
                     <div class="card-header">ЦП (CPU)</div>
@@ -240,12 +242,12 @@
                 </div>
                 <div class="card">
                     <div class="card-header">ОЗУ (RAM)</div>
-                    <div class="card-value"><span id="ram-used">0</span> / 32 ГБ</div>
+                    <div class="card-value"><span id="ram-used">0</span> / <span id="ram-total">0</span> ГБ</div>
                     <div class="progress-bar-bg"><div class="progress-bar-fill" id="ram-progress" style="background: var(--accent-primary);"></div></div>
                 </div>
                 <div class="card">
                     <div class="card-header">Диск (C:)</div>
-                    <div class="card-value"><span id="disk-used">0</span> / 1 ТБ</div>
+                    <div class="card-value"><span id="disk-used">0</span> / <span id="disk-total">0</span> ГБ</div>
                     <div class="progress-bar-bg"><div class="progress-bar-fill" id="disk-progress" style="background: var(--accent-yellow);"></div></div>
                 </div>
                 <div class="card">
@@ -255,7 +257,6 @@
                 </div>
             </div>
 
-            <!-- НОВЫЙ БЛОК: Статистика за 3 дня -->
             <div class="card" style="padding: 20px;">
                 <div class="card-header" style="margin-bottom: 16px;">
                     <span>Статистика за 3 дня</span>
@@ -293,18 +294,16 @@
                 </div>
             </div>
 
-            <!-- НОВЫЙ БЛОК: Самый большой расход -->
             <div class="card" style="padding: 20px;">
                 <div class="card-header" style="margin-bottom: 16px;">
                     <span>Самый большой расход</span>
                     <span class="card-trend">За всё время</span>
                 </div>
                 <div id="top-consumers" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Заполняется через JS -->
+                    <div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">Нет данных</div>
                 </div>
             </div>
 
-            <!-- Графики -->
             <div class="grid-charts">
                 <div class="card">
                     <div class="card-header">История нагрузки ЦП</div>
@@ -317,7 +316,9 @@
                 </div>
                 <div class="card">
                     <div class="card-header">Топ процессов</div>
-                    <div id="top-processes" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;"></div>
+                    <div id="top-processes" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+                        <div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">Нет данных</div>
+                    </div>
                 </div>
             </div>
             <div style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:10px;">Данные обновляются каждые 5 секунд</div>
@@ -336,7 +337,7 @@
                 </div>
                 <div class="info-block">
                     <h4>Память</h4>
-                    <div class="info-row"><span class="info-label">Объем</span><span class="info-value">32 GB DDR4</span></div>
+                    <div class="info-row"><span class="info-label">Объем</span><span class="info-value">16 GB DDR4</span></div>
                     <div class="info-row"><span class="info-label">Частота</span><span class="info-value">3200 MHz</span></div>
                     <div class="info-row"><span class="info-label">Каналы</span><span class="info-value">Dual-Channel</span></div>
                     <div class="info-row"><span class="info-label">Производитель</span><span class="info-value">Kingston Fury</span></div>
@@ -407,10 +408,10 @@
             <div class="download-hero">
                 <h2>ChanceS™ Agent</h2>
                 <p>Легковесный клиент для передачи статистики с вашего компьютера. Установка занимает меньше минуты.</p>
-                <button class="btn-download" onclick="alert('Загрузка установщика... (демо)')">
+                <a href="https://github.com/Chancick/ChancesStats-Agent/releases/download/V-1.0-BETA/ChanceS.Agent.Setup.1.0.0.exe" download class="btn-download">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Скачать для Windows
-                </button>
+                </a>
                 <p style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">v2.4.1 • Windows 10/11 • 64-bit</p>
             </div>
             <div class="features-grid">
@@ -504,7 +505,6 @@
 
     </main>
 
-    <!-- MODAL -->
     <div class="modal-overlay" id="connectModal">
         <div class="modal">
             <h2>Подключение ПК</h2>
@@ -518,7 +518,6 @@
     </div>
 
     <script>
-        // === НАВИГАЦИЯ ===
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -529,7 +528,6 @@
             });
         });
 
-        // === МОДАЛЬНОЕ ОКНО ===
         let isConnecting = false;
         function openModal() { 
             document.getElementById('connectModal').classList.add('show'); 
@@ -566,7 +564,6 @@
             }, 1000);
         }
 
-        // === ТЕМЫ ===
         function applyTheme(theme) {
             document.body.className = theme === 'default' ? '' : `theme-${theme}`;
             localStorage.setItem('chances_theme', theme);
@@ -600,10 +597,10 @@
             restartInterval();
         }
 
-        // === ДАННЫЕ ===
         let autoUpdate = true;
         let dataInterval;
         let updateIntervalMs = 5000;
+        let cpuHistory = Array(30).fill(0);
 
         function restartInterval() {
             clearInterval(dataInterval);
@@ -616,113 +613,99 @@
             restartInterval();
         }
 
-        const rand = (min, max) => Math.random() * (max - min) + min;
-        let cpuHistory = Array(30).fill(10);
-        let stats3d = { cpu: [0,0,0], ram: [0,0,0] };
-
-        function updateData() {
-            if (!autoUpdate) return;
-            let cpu = rand(5, 60);
-            document.getElementById('cpu-load').innerText = cpu.toFixed(0);
-            document.getElementById('cpu-progress').style.width = cpu + '%';
-
-            let ram = rand(8, 24);
-            document.getElementById('ram-used').innerText = ram.toFixed(1);
-            document.getElementById('ram-progress').style.width = (ram/32*100) + '%';
-
-            let disk = rand(200, 600);
-            document.getElementById('disk-used').innerText = disk.toFixed(0);
-            document.getElementById('disk-progress').style.width = (disk/1000*100) + '%';
-
-            document.getElementById('net-down').innerText = rand(10, 120).toFixed(1);
-
-            cpuHistory.push(cpu);
-            if (cpuHistory.length > 30) cpuHistory.shift();
-            let path = `M0,150`;
-            cpuHistory.forEach((val, i) => {
-                let x = (i / (cpuHistory.length - 1)) * 600;
-                let y = 150 - (val / 100) * 150;
-                path += ` L${x},${y}`;
-            });
-            document.getElementById('cpu-line').setAttribute('d', path);
-            document.getElementById('cpu-area').setAttribute('d', path + ` L600,150 L0,150 Z`);
-
-            const procs = [
-                { name: 'chrome.exe', ram: rand(1, 3) },
-                { name: 'discord.exe', ram: rand(0.5, 2) },
-                { name: 'steam.exe', ram: rand(0.2, 1) }
-            ];
-            document.getElementById('top-processes').innerHTML = procs.map(p => `
-                <div>
-                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                        <span>${p.name}</span><span>${p.ram.toFixed(1)} ГБ</span>
-                    </div>
-                    <div class="progress-bar-bg" style="height: 3px;"><div class="progress-bar-fill" style="width: ${p.ram/3*100}%; background: var(--accent-secondary);"></div></div>
-                </div>
-            `).join('');
-
+        function resetToZero() {
+            document.getElementById('cpu-load').innerText = '0';
+            document.getElementById('cpu-progress').style.width = '0%';
+            document.getElementById('ram-used').innerText = '0';
+            document.getElementById('ram-total').innerText = '0';
+            document.getElementById('ram-progress').style.width = '0%';
+            document.getElementById('disk-used').innerText = '0';
+            document.getElementById('disk-total').innerText = '0';
+            document.getElementById('disk-progress').style.width = '0%';
+            document.getElementById('net-down').innerText = '0';
+            document.getElementById('top-processes').innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">Нет данных</div>';
             const tbody = document.querySelector('#process-table tbody');
-            if (tbody) {
-                tbody.innerHTML = ['system.exe', 'svchost.exe', 'chrome.exe', 'explorer.exe', 'discord.exe'].map((name) => `
-                    <tr>
-                        <td style="font-weight:500;">${name}</td>
-                        <td style="color:var(--text-muted);">${Math.floor(rand(1000, 9999))}</td>
-                        <td>${rand(0.1, 5).toFixed(1)}%</td>
-                        <td>${rand(10, 500).toFixed(0)} МБ</td>
-                        <td><span class="safe-badge">Норма</span></td>
-                    </tr>
-                `).join('');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Нет данных</td></tr>';
+            document.getElementById('avg-cpu-3d').innerText = '0%';
+            document.getElementById('avg-ram-3d').innerText = '0 ГБ';
+            document.getElementById('chart-3d-line').setAttribute('d', 'M0,120 L600,120');
+            document.getElementById('chart-3d-area').setAttribute('d', 'M0,120 L600,120');
+            document.getElementById('dot-3d-0').setAttribute('cy', '120');
+            document.getElementById('dot-3d-1').setAttribute('cy', '120');
+            document.getElementById('dot-3d-2').setAttribute('cy', '120');
+            document.getElementById('top-consumers').innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">Нет данных</div>';
+        }
+
+        async function updateData() {
+            if (!autoUpdate) return;
+            const banner = document.getElementById('statusBanner');
+            if (banner) { banner.style.display = 'block'; banner.innerText = 'Загрузка...'; }
+
+            try {
+                const res = await fetch('https://chancesstats-1.onrender.com/api/stats');
+                if (!res.ok) throw new Error('No data');
+                const data = await res.json();
+                if (banner) banner.style.display = 'none';
+
+                const cpu = data.cpu || 0;
+                document.getElementById('cpu-load').innerText = Math.round(cpu);
+                document.getElementById('cpu-progress').style.width = cpu + '%';
+
+                const ramUsedGB = (data.ram.used / (1024 ** 3)) || 0;
+                const ramTotalGB = (data.ram.total / (1024 ** 3)) || 0;
+                document.getElementById('ram-used').innerText = ramUsedGB.toFixed(1);
+                document.getElementById('ram-total').innerText = ramTotalGB.toFixed(0);
+                document.getElementById('ram-progress').style.width = (ramUsedGB / ramTotalGB * 100) + '%';
+
+                const diskUsedGB = (data.disk.used / (1024 ** 3)) || 0;
+                const diskTotalGB = (data.disk.total / (1024 ** 3)) || 0;
+                document.getElementById('disk-used').innerText = diskUsedGB.toFixed(0);
+                document.getElementById('disk-total').innerText = diskTotalGB.toFixed(0);
+                document.getElementById('disk-progress').style.width = (diskUsedGB / diskTotalGB * 100) + '%';
+
+                document.getElementById('net-down').innerText = ((data.network.rxSpeed * 8) / 1000000).toFixed(1);
+
+                cpuHistory.push(cpu);
+                if (cpuHistory.length > 30) cpuHistory.shift();
+                let path = `M0,150`;
+                cpuHistory.forEach((val, i) => {
+                    let x = (i / (cpuHistory.length - 1)) * 600;
+                    let y = 150 - (val / 100) * 150;
+                    path += ` L${x},${y}`;
+                });
+                document.getElementById('cpu-line').setAttribute('d', path);
+                document.getElementById('cpu-area').setAttribute('d', path + ` L600,150 L0,150 Z`);
+
+                if (data.processes && data.processes.length) {
+                    document.getElementById('top-processes').innerHTML = data.processes.slice(0, 3).map(p => `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                                <span>${p.name}</span><span>${(p.ram / (1024**3)).toFixed(1)} ГБ</span>
+                            </div>
+                            <div class="progress-bar-bg" style="height: 3px;">
+                                <div class="progress-bar-fill" style="width: ${Math.min(p.ram / (1024**3) / 4 * 100, 100)}%; background: var(--accent-secondary);"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                    const tbody = document.querySelector('#process-table tbody');
+                    if (tbody) {
+                        tbody.innerHTML = data.processes.map(p => `
+                            <tr>
+                                <td style="font-weight:500;">${p.name}</td>
+                                <td style="color:var(--text-muted);">${p.pid}</td>
+                                <td>—</td>
+                                <td>${(p.ram / (1024**3)).toFixed(1)} ГБ</td>
+                                <td><span class="safe-badge">Норма</span></td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                if (banner) { banner.style.display = 'block'; banner.innerText = 'Ожидание подключения агента...'; }
+                resetToZero();
             }
         }
 
-        // === СТАТИСТИКА ЗА 3 ДНЯ ===
-        function generateStats3d() {
-            for (let i = 0; i < 3; i++) {
-                stats3d.cpu[i] = rand(15, 55);
-                stats3d.ram[i] = rand(8, 22);
-            }
-            document.getElementById('avg-cpu-3d').innerText = (stats3d.cpu.reduce((a,b)=>a+b,0)/3).toFixed(0) + '%';
-            document.getElementById('avg-ram-3d').innerText = (stats3d.ram.reduce((a,b)=>a+b,0)/3).toFixed(1) + ' ГБ';
-            draw3dChart();
-        }
-        function draw3dChart() {
-            const width = 600, height = 120;
-            const points = stats3d.cpu.map((val, i) => ({ x: (i / 2) * width, y: height - (val / 100) * height }));
-            let pathD = `M${points[0].x},${points[0].y}`;
-            for (let i = 1; i < points.length; i++) pathD += ` L${points[i].x},${points[i].y}`;
-            document.getElementById('chart-3d-line').setAttribute('d', pathD);
-            document.getElementById('chart-3d-area').setAttribute('d', pathD + ` L${width},${height} L0,${height} Z`);
-            points.forEach((p, i) => {
-                const dot = document.getElementById(`dot-3d-${i}`);
-                if (dot) { dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y); }
-            });
-        }
-
-        // === САМЫЙ БОЛЬШОЙ РАСХОД ===
-        const topConsumersData = [
-            { name: 'chrome.exe', cpu: 45, ram: 3.2, color: 'var(--accent-primary)' },
-            { name: 'discord.exe', cpu: 22, ram: 2.1, color: 'var(--accent-secondary)' },
-            { name: 'steam.exe', cpu: 18, ram: 1.8, color: 'var(--accent-yellow)' },
-            { name: 'obs64.exe', cpu: 12, ram: 1.5, color: 'var(--accent-green)' },
-            { name: 'code.exe', cpu: 8, ram: 1.1, color: 'var(--accent-red)' }
-        ];
-        function renderTopConsumers() {
-            const container = document.getElementById('top-consumers');
-            if (!container) return;
-            container.innerHTML = topConsumersData.map(p => `
-                <div class="top-consumer-row">
-                    <div class="header">
-                        <span>${p.name}</span>
-                        <span style="color: var(--text-muted);">${p.cpu}% ЦП · ${p.ram} ГБ</span>
-                    </div>
-                    <div class="bar">
-                        <div class="fill" style="width: ${p.cpu}%; background: ${p.color};"></div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // === АНТИВИРУС ===
         const suspiciousSignatures = [
             { name: 'unknown_crack.exe', path: 'C:\\Users\\Public\\Downloads', risk: 'Высокий' },
             { name: 'crypto_miner.bin', path: 'C:\\Windows\\Temp', risk: 'Критический' },
@@ -735,28 +718,16 @@
             if (!tbody) return;
             document.getElementById('scan-total').innerText = scannedThreats.length + 50;
             document.getElementById('scan-threats').innerText = scannedThreats.filter(t => !t.trusted).length;
-
             tbody.innerHTML = scannedThreats.map((t, i) => {
                 if (t.trusted) {
                     return `<tr><td style="font-weight:500;">${t.name}</td><td style="color:var(--text-muted); font-size:12px;">${t.path}</td><td><span class="safe-badge">Безопасно</span></td><td>—</td></tr>`;
                 }
-                return `
-                    <tr class="threat-row">
-                        <td style="font-weight:600; color: var(--accent-red);">${t.name}</td>
-                        <td style="color:var(--text-muted); font-size:12px;">${t.path}</td>
-                        <td><span class="threat-badge">Подозрительно (${t.risk})</span></td>
-                        <td style="display:flex; gap:6px;">
-                            <button class="btn-terminate" onclick="confirmTerminate(${i})">Завершить</button>
-                            <button class="btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="trustProcess(${i})">В исключения</button>
-                        </td>
-                    </tr>`;
+                return `<tr class="threat-row"><td style="font-weight:600; color: var(--accent-red);">${t.name}</td><td style="color:var(--text-muted); font-size:12px;">${t.path}</td><td><span class="threat-badge">Подозрительно (${t.risk})</span></td><td style="display:flex; gap:6px;"><button class="btn-terminate" onclick="confirmTerminate(${i})">Завершить</button><button class="btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="trustProcess(${i})">В исключения</button></td></tr>`;
             }).join('');
-
             if (scannedThreats.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--accent-green);">Угроз не обнаружено. Система чиста.</td></tr>`;
             }
         }
-
         function runScan() {
             const btn = document.querySelector('.btn-scan');
             btn.innerText = 'Сканирование...';
@@ -780,13 +751,11 @@
             renderSecurityTable();
         }
 
-        // === СБРОС ===
         function resetSettings() {
             localStorage.clear();
             location.reload();
         }
 
-        // === ИНИЦИАЛИЗАЦИЯ ===
         window.onload = () => {
             const savedTheme = localStorage.getItem('chances_theme');
             if (savedTheme && savedTheme !== 'default') {
@@ -802,16 +771,12 @@
                     document.documentElement.style.setProperty('--accent-secondary', cs);
                 }
             }
-
             const savedBlur = localStorage.getItem('chances_blur');
             if (savedBlur) { applyBlur(savedBlur); document.getElementById('blur-range').value = savedBlur; }
-            
             const savedRadius = localStorage.getItem('chances_radius');
             if (savedRadius) { applyRadius(savedRadius); document.getElementById('radius-range').value = savedRadius; }
-            
             const savedSpeed = localStorage.getItem('chances_speed');
             if (savedSpeed) { applySpeed(savedSpeed); document.getElementById('speed-range').value = savedSpeed; }
-
             const savedInterval = localStorage.getItem('chances_interval');
             if (savedInterval) {
                 updateIntervalMs = parseInt(savedInterval);
@@ -819,9 +784,8 @@
             }
 
             renderSecurityTable();
+            resetToZero();
             updateData();
-            generateStats3d();
-            renderTopConsumers();
             dataInterval = setInterval(updateData, updateIntervalMs);
         };
     </script>
