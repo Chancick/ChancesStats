@@ -21,6 +21,7 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 app.get('/api/health', (req, res) => res.json({ status: 'ok', pairs: pairs.size, tokens: tokens.size }));
 
 app.post('/api/pair', (req, res) => {
