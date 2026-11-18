@@ -8,13 +8,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// === ХРАНИЛИЩЕ ===
-const pairs = new Map();      // код -> { hostname, token, confirmed, createdAt }
-const tokens = new Map();     // токен -> { code, hostname, stats, lastSeen }
-const commands = new Map();   // токен -> { id, cmd, message }
+const pairs = new Map();
+const tokens = new Map();
+const commands = new Map();
 let cmdId = 1;
 
-// Очистка старых кодов (живут 5 минут)
 setInterval(() => {
   const now = Date.now();
   for (const [code, data] of pairs) {
@@ -22,22 +20,17 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-// === ГЛАВНАЯ ===
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// === ПРОВЕРКА ===
-app.get('/api/health', (req, res) => res.json({ status: 'ok', pairs: pairs.size, tokens: tokens.size }));
-
-// === АГЕНТ РЕГИСТРИРУЕТ КОД ===
 app.post('/api/pair', (req, res) => {
   const { code, hostname } = req.body;
   if (!code || code.length !== 6) return res.status(400).json({ error: 'Invalid code' });
   pairs.set(code, { hostname: hostname || 'unknown', token: null, confirmed: false, createdAt: Date.now() });
-  console.log(`[PAIR] Код ${code} от ${hostname}`);
+  console.log('[PAIR] Код', code, 'от', hostname);
   res.json({ status: 'ok' });
 });
 
-// === АГЕНТ ПРОВЕРЯЕТ СТАТУС КОДА ===
 app.get('/api/pair/status', (req, res) => {
   const { code } = req.query;
   const p = pairs.get(code);
@@ -46,22 +39,18 @@ app.get('/api/pair/status', (req, res) => {
   res.json({ status: 'pending' });
 });
 
-// === САЙТ ПОДТВЕРЖДАЕТ КОД (ЭТОГО НЕ ХВАТАЛО!) ===
 app.post('/api/confirm', (req, res) => {
   const { code } = req.body;
   const p = pairs.get(code);
-  if (!p || p.confirmed) {
-    return res.json({ status: 'error', message: 'Неверный или использованный код' });
-  }
+  if (!p || p.confirmed) return res.json({ status: 'error', message: 'Неверный код' });
   const token = 'tok_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   p.token = token;
   p.confirmed = true;
   tokens.set(token, { code, hostname: p.hostname, stats: null, lastSeen: Date.now() });
-  console.log(`[CONFIRM] Код ${code} -> токен ${token.slice(0, 12)}...`);
+  console.log('[CONFIRM] Код', code, '-> токен', token.slice(0, 12));
   res.json({ status: 'ok', token });
 });
 
-// === АГЕНТ ШЛЁТ СТАТИСТИКУ ===
 app.post('/api/stats', (req, res) => {
   const token = req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.json({ error: 'No data yet' });
@@ -71,7 +60,6 @@ app.post('/api/stats', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// === САЙТ ЧИТАЕТ СТАТИСТИКУ ===
 app.get('/api/stats', (req, res) => {
   const token = req.query.token || req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.json({ error: 'No data yet' });
@@ -80,27 +68,16 @@ app.get('/api/stats', (req, res) => {
   res.json(t.stats || { error: 'No data yet' });
 });
 
-// === СПИСОК УСТРОЙСТВ ===
-app.get('/api/devices', (req, res) => {
-  const devices = [];
-  for (const [token, data] of tokens) {
-    devices.push({ token, hostname: data.hostname, code: data.code, lastSeen: data.lastSeen, hasStats: !!data.stats });
-  }
-  res.json(devices);
-});
-
-// === САЙТ ОТПРАВЛЯЕТ КОМАНДУ ===
 app.post('/api/command', (req, res) => {
   const token = req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.status(401).json({ error: 'Unauthorized' });
   const { cmd, message } = req.body;
   if (!cmd) return res.status(400).json({ error: 'No command' });
   commands.set(token, { id: cmdId++, cmd, message: message || null, createdAt: Date.now() });
-  console.log(`[CMD] Токен ${token.slice(0, 12)}... -> ${cmd}`);
+  console.log('[CMD]', token.slice(0, 12), '->', cmd);
   res.json({ status: 'ok', id: cmdId - 1 });
 });
 
-// === АГЕНТ ЗАБИРАЕТ КОМАНДУ ===
 app.get('/api/commands', (req, res) => {
   const { token } = req.query;
   if (!token || !commands.has(token)) return res.json({});
@@ -109,23 +86,6 @@ app.get('/api/commands', (req, res) => {
   res.json(cmd);
 });
 
-// === АГЕНТ ПОДТВЕРЖДАЕТ КОМАНДУ ===
 app.post('/api/commands/ack', (req, res) => res.json({ status: 'ok' }));
 
-// === ОТВЯЗКА ===
-app.post('/api/unpair', (req, res) => {
-  const token = req.headers['x-pair-token'] || req.body.token;
-  if (token && tokens.has(token)) {
-    const data = tokens.get(token);
-    pairs.delete(data.code);
-    tokens.delete(token);
-    commands.delete(token);
-    console.log(`[UNPAIR] Токен ${token.slice(0, 12)}... отвязан`);
-    return res.json({ status: 'ok' });
-  }
-  res.json({ status: 'error', message: 'Token not found' });
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ ChanceS Stats API running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log('✅ ChanceS API on port', PORT));
