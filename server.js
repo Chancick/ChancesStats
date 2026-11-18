@@ -8,11 +8,13 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-const pairs = new Map();
-const tokens = new Map();
-const commands = new Map();
+// === ХРАНИЛИЩЕ ===
+const pairs = new Map();      // код -> { hostname, token, confirmed, createdAt }
+const tokens = new Map();     // токен -> { code, hostname, stats, lastSeen }
+const commands = new Map();   // токен -> { id, cmd, message }
 let cmdId = 1;
 
+// Очистка старых кодов (живут 5 минут)
 setInterval(() => {
   const now = Date.now();
   for (const [code, data] of pairs) {
@@ -20,10 +22,13 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
+// === ГЛАВНАЯ ===
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
+// === ПРОВЕРКА ===
 app.get('/api/health', (req, res) => res.json({ status: 'ok', pairs: pairs.size, tokens: tokens.size }));
 
+// === АГЕНТ РЕГИСТРИРУЕТ КОД ===
 app.post('/api/pair', (req, res) => {
   const { code, hostname } = req.body;
   if (!code || code.length !== 6) return res.status(400).json({ error: 'Invalid code' });
@@ -32,6 +37,7 @@ app.post('/api/pair', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// === АГЕНТ ПРОВЕРЯЕТ СТАТУС КОДА ===
 app.get('/api/pair/status', (req, res) => {
   const p = pairs.get(req.query.code);
   if (!p) return res.json({ status: 'not_found' });
@@ -39,6 +45,7 @@ app.get('/api/pair/status', (req, res) => {
   res.json({ status: 'pending' });
 });
 
+// === САЙТ ПОДТВЕРЖДАЕТ КОД ===
 app.post('/api/confirm', (req, res) => {
   const p = pairs.get(req.body.code);
   if (!p || p.confirmed) return res.json({ status: 'error', message: 'Неверный код' });
@@ -50,6 +57,7 @@ app.post('/api/confirm', (req, res) => {
   res.json({ status: 'ok', token });
 });
 
+// === АГЕНТ ШЛЁТ СТАТИСТИКУ ===
 app.post('/api/stats', (req, res) => {
   const token = req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.json({ error: 'No data yet' });
@@ -59,12 +67,23 @@ app.post('/api/stats', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// === САЙТ ЧИТАЕТ СТАТИСТИКУ ===
 app.get('/api/stats', (req, res) => {
   const token = req.query.token || req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.json({ error: 'No data yet' });
   res.json(tokens.get(token).stats || { error: 'No data yet' });
 });
 
+// === СПИСОК УСТРОЙСТВ ===
+app.get('/api/devices', (req, res) => {
+  const devices = [];
+  for (const [token, data] of tokens) {
+    devices.push({ token, hostname: data.hostname, code: data.code, lastSeen: data.lastSeen, hasStats: !!data.stats });
+  }
+  res.json(devices);
+});
+
+// === САЙТ ОТПРАВЛЯЕТ КОМАНДУ ===
 app.post('/api/command', (req, res) => {
   const token = req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.status(401).json({ error: 'Unauthorized' });
@@ -75,6 +94,7 @@ app.post('/api/command', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// === АГЕНТ ЗАБИРАЕТ КОМАНДУ ===
 app.get('/api/commands', (req, res) => {
   const { token } = req.query;
   if (!token || !commands.has(token)) return res.json({});
@@ -85,6 +105,7 @@ app.get('/api/commands', (req, res) => {
 
 app.post('/api/commands/ack', (req, res) => res.json({ status: 'ok' }));
 
+// === ОТВЯЗКА ===
 app.post('/api/unpair', (req, res) => {
   const token = req.headers['x-pair-token'] || req.body.token;
   if (token && tokens.has(token)) {
