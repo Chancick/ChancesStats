@@ -45,7 +45,7 @@ app.post('/api/confirm', (req, res) => {
   p.token = token;
   p.confirmed = true;
   tokens.set(token, { code: req.body.code, hostname: p.hostname, stats: null, lastSeen: Date.now() });
-  console.log('[CONFIRM]', req.body.code, '->', token.slice(0, 12));
+  console.log('[CONFIRM]', req.body.code);
   res.json({ status: 'ok', token });
 });
 
