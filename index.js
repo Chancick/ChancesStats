@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
 const pairs = new Map();
@@ -21,33 +21,31 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', pairs: pairs.size, tokens: tokens.size }));
 
 app.post('/api/pair', (req, res) => {
   const { code, hostname } = req.body;
   if (!code || code.length !== 6) return res.status(400).json({ error: 'Invalid code' });
   pairs.set(code, { hostname: hostname || 'unknown', token: null, confirmed: false, createdAt: Date.now() });
-  console.log('[PAIR] Код', code, 'от', hostname);
+  console.log('[PAIR]', code, hostname);
   res.json({ status: 'ok' });
 });
 
 app.get('/api/pair/status', (req, res) => {
-  const { code } = req.query;
-  const p = pairs.get(code);
+  const p = pairs.get(req.query.code);
   if (!p) return res.json({ status: 'not_found' });
   if (p.confirmed && p.token) return res.json({ status: 'confirmed', token: p.token });
   res.json({ status: 'pending' });
 });
 
 app.post('/api/confirm', (req, res) => {
-  const { code } = req.body;
-  const p = pairs.get(code);
+  const p = pairs.get(req.body.code);
   if (!p || p.confirmed) return res.json({ status: 'error', message: 'Неверный код' });
   const token = 'tok_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   p.token = token;
   p.confirmed = true;
-  tokens.set(token, { code, hostname: p.hostname, stats: null, lastSeen: Date.now() });
-  console.log('[CONFIRM] Код', code, '-> токен', token.slice(0, 12));
+  tokens.set(token, { code: req.body.code, hostname: p.hostname, stats: null, lastSeen: Date.now() });
+  console.log('[CONFIRM]', req.body.code, '->', token.slice(0, 12));
   res.json({ status: 'ok', token });
 });
 
@@ -63,9 +61,7 @@ app.post('/api/stats', (req, res) => {
 app.get('/api/stats', (req, res) => {
   const token = req.query.token || req.headers['x-pair-token'];
   if (!token || !tokens.has(token)) return res.json({ error: 'No data yet' });
-  const t = tokens.get(token);
-  t.lastSeen = Date.now();
-  res.json(t.stats || { error: 'No data yet' });
+  res.json(tokens.get(token).stats || { error: 'No data yet' });
 });
 
 app.post('/api/command', (req, res) => {
@@ -74,8 +70,8 @@ app.post('/api/command', (req, res) => {
   const { cmd, message } = req.body;
   if (!cmd) return res.status(400).json({ error: 'No command' });
   commands.set(token, { id: cmdId++, cmd, message: message || null, createdAt: Date.now() });
-  console.log('[CMD]', token.slice(0, 12), '->', cmd);
-  res.json({ status: 'ok', id: cmdId - 1 });
+  console.log('[CMD]', cmd);
+  res.json({ status: 'ok' });
 });
 
 app.get('/api/commands', (req, res) => {
@@ -87,5 +83,16 @@ app.get('/api/commands', (req, res) => {
 });
 
 app.post('/api/commands/ack', (req, res) => res.json({ status: 'ok' }));
+
+app.post('/api/unpair', (req, res) => {
+  const token = req.headers['x-pair-token'] || req.body.token;
+  if (token && tokens.has(token)) {
+    pairs.delete(tokens.get(token).code);
+    tokens.delete(token);
+    commands.delete(token);
+    return res.json({ status: 'ok' });
+  }
+  res.json({ status: 'error' });
+});
 
 app.listen(PORT, () => console.log('✅ ChanceS API on port', PORT));
