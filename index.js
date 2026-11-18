@@ -74,6 +74,15 @@ app.get('/api/stats', (req, res) => {
   res.json(tokens.get(token).stats || { error: 'No data yet' });
 });
 
+// === СПИСОК УСТРОЙСТВ ===
+app.get('/api/devices', (req, res) => {
+  const devices = [];
+  for (const [token, data] of tokens) {
+    devices.push({ token, hostname: data.hostname, code: data.code, lastSeen: data.lastSeen, hasStats: !!data.stats });
+  }
+  res.json(devices);
+});
+
 // === САЙТ ОТПРАВЛЯЕТ КОМАНДУ ===
 app.post('/api/command', (req, res) => {
   const token = req.headers['x-pair-token'];
